@@ -1,12 +1,11 @@
 import boto3
+import cv2
 import tensorflow as tf
-from tensorflow.keras.applications.mobilenet_v2 import (decode_predictions,
-                                                        preprocess_input)
+from tensorflow.keras.applications.mobilenet_v2 import (decode_predictions, preprocess_input)
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 
 s3_client = boto3.client('s3')
 model = tf.keras.models.load_model('./model.h5', compile=False)
-
 
 def handler(event, context):
     try:
@@ -26,7 +25,17 @@ def handler(event, context):
             # 推論
             predict = model.predict(img)
             result = decode_predictions(predict, top=5)
-            print(result)
+            print(result[0][0][1])
+
+            # 推論結果を画像に書き込み
+            img = cv2.imread(download_path)
+            cv2.putText(img, result[0][0][1], (10, 30), cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.imwrite('/tmp/image.png', img)
+
+            # 画像をアップロード
+            s3_client.upload_file('/tmp/image.png', bucket, "result.png", ExtraArgs={"ContentType": "image/png"})
+            print("saved")
+
 
         return 'Success'
 
