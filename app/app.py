@@ -28,12 +28,17 @@ def handler(event, context):
             print(result[0][0][1])
 
             # 推論結果を画像に書き込み
+            width = 300
             img = cv2.imread(download_path)
-            cv2.putText(img, result[0][0][1], (10, 30), cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 1, cv2.LINE_AA)
-            cv2.imwrite('/tmp/image.png', img)
+            h, w = img.shape[:2]
+            height = round(h * (width / w))
+            img = cv2.resize(img, dsize=(width, height))
+            cv2.putText(img, result[0][0][1], (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 0), 6, cv2.LINE_AA)
+            cv2.putText(img, result[0][0][1], (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 3, cv2.LINE_AA)
+            cv2.imwrite('/tmp/image.jpeg', img)
 
             # 画像をアップロード
-            s3_client.upload_file('/tmp/image.png', bucket, "result.png", ExtraArgs={"ContentType": "image/png"})
+            s3_client.upload_file('/tmp/image.jpeg', bucket, "result.jpeg", ExtraArgs={"ContentType": "image/jpeg"})
             print("saved")
 
 
