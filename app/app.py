@@ -192,10 +192,13 @@ def handler(event, context):
             if (splitkey[1].endswith('.mov') or splitkey[1].endswith('.MOV')):
                 writer.release()
 
+            # 推論結果を画像に書き込み
+            img = cv2.imread(download_path)
+            cv2.putText(img, result[0][0][1], (10, 30), cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.imwrite('/tmp/image.png', img)
 
             # 画像をアップロード
-            newkey = key.replace(splitkey[0], 'result')	# result/ファイル名 のnewkeyを作成
-            s3_client.upload_file("/tmp/" + splitkey[1], bucket, newkey)
+            s3_client.upload_file('/tmp/image.png', bucket, "result.png", ExtraArgs={"ContentType": "image/png"})
             print("saved")
 
 
