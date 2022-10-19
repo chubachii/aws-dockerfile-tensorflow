@@ -59,27 +59,41 @@ def handler(event, context):
             splitkey = key.split('/')	#keyのフォルダ名/ファイル名を分離
             print("name:"+splitkey[1])
 
+            # 読み込み用
+            cap = cv2.VideoCapture(download_path)
+
+            
             degree = 0
             if splitkey[1].endswith('.mov') or splitkey[1].endswith('.MOV') or splitkey[1].endswith('.mp4') or splitkey[1].endswith('.MP4'): 
                 
                 media_info = MediaInfo.parse(download_path)
+
+                # 入力ファイルのサイズ
+                w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
                 for track in media_info.tracks:
-                    print(track)
                     if track.rotation == "90.000":
-                        degree = 90
-                    elif track.rotation == "180.000":
                         degree = 180
+                        frame_width, frame_height = w, h  
+                        break      
+                    elif track.rotation == "180.000":
+                        degree = 0
+                        frame_width, frame_height = w, h  
+                        break
                     elif track.rotation == "270.000":
-                        degree = 270
+                        degree = 180
+                        frame_width, frame_height = w, h  
+                        break
+                    else:
+                        degree = 0
+                        frame_width, frame_height = w, h
 
             print("rotated " + str(degree))
-            # 読み込み用
-            cap = cv2.VideoCapture(download_path)
+            
 
             if splitkey[1].endswith('.mp4') or splitkey[1].endswith('.MP4'):
                 # 書き込み用
-                frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                 original_fps = cap.get(cv2.CAP_PROP_FPS)
                 fmt = cv2.VideoWriter_fourcc('m', 'p', '4', 'v') 
                 writer = cv2.VideoWriter("/tmp/" + splitkey[1], fmt, VIDEO_FPS, (frame_width, frame_height))
@@ -88,8 +102,6 @@ def handler(event, context):
 
             if splitkey[1].endswith('.mov') or splitkey[1].endswith('.MOV'):
                 # 書き込み用
-                frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                 original_fps = cap.get(cv2.CAP_PROP_FPS)
                 fmt = cv2.VideoWriter_fourcc(*'XVID')
                 writer = cv2.VideoWriter("/tmp/" + splitkey[1], fmt, VIDEO_FPS, (frame_width, frame_height))
